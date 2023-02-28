@@ -1,0 +1,130 @@
+import requests
+import json
+import re
+import uuid 
+import numpy 
+from config import *
+
+def device_mac_address():
+    '''
+    Returns devices MAC-Address
+    '''
+    mac_address = ":".join(re.findall('..', '%012x' % uuid.getnode()))
+    return mac_address
+
+def request_recipe(): 
+    '''
+    Device requests its recipe   
+    :return: recipe in http response object
+    '''
+    #Request device's recipe
+    url = "http://"+serverIP+"/api/post/requestrecipe/"
+    
+    payload = json.dumps(
+        {
+        "Request_Data": {
+            "Request": "Please send back my recipe. "}
+        })
+    headers = {
+        'Key': '0120',
+        'Content-Type': 'application/json'
+    }
+    #Server response (recived recipe)
+    response = requests.request("POST", url, headers=headers, data=payload)
+    #print(response.text)
+    return response
+
+def list_of_operations(recipe):    
+    '''
+    Text
+    '''
+    serverIP = recipe.headers["Host"]
+    response_payload = recipe.json()
+    key_list         = list(response_payload["Response_Data"]["key"].values())
+    method_list      = list(response_payload["Response_Data"]["method"].values())
+    route_list       = list(response_payload["Response_Data"]["route"].values())
+    requestkey_list  = list(response_payload["Response_Data"]["request"].values())
+    responsekey_list = list(response_payload["Response_Data"]["response"].values())
+    url_list = []
+    for route in route_list: 
+        url_list.append('http://'+serverIP+route)
+
+    return url_list,method_list,key_list,requestkey_list,responsekey_list
+
+def func(url_list,method_list,key_list,requestkey_list,responsekey_list):
+    '''
+    :return: none
+    '''
+    for idx, item in enumerate(url_list):
+        payload=0
+        headers=0
+        if(str(key_list[idx])[len(str(key_list[idx]))-3] == "1"): 
+            d = dict.fromkeys(requestkey_list[idx],1)
+            
+            print(dict)
+            payload = json.dumps(
+                {  
+                    "Request_Data": {
+                        d
+                    }
+                })
+        if((str(key_list[idx])[len(str(key_list[idx]))-3]) == "2"): 
+            payload = json.dumps(
+                {  
+                    "Respone_Data": {
+                        {key:"" for key in responsekey_list[idx]}
+                    }
+                })       
+        headers = {
+            'Key': key_list[idx],
+            'Content-Type': 'application/json'
+        }
+        #Server response (recived recipe)
+        #response = requests.request(method_list[idx], url_list[idx], headers=headers, data=payload) 
+        print(method_list[idx])
+        print(url_list[idx])
+        print(payload)
+        print(headers)
+
+def main(): 
+    #device mac adress
+    mac_address = device_mac_address()
+    #request recipe
+    recipe = request_recipe()
+    print(recipe.text)
+    #build list of operations regarding the received recipe
+    url_list,method_list,key_list,requestkey_list,responsekey_list = list_of_operations(recipe)
+    #
+    #func(url_list,method_list,key_list,requestkey_list,responsekey_list)
+    
+if __name__ == '__main__':
+    main()
+
+
+    # Byte-compiled / optimized / DLL files
+__pycache__/
+
+# IDE
+.vs/
+.vscode/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Git
+.gitattributes
